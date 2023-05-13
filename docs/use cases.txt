@@ -1,0 +1,7 @@
+Use cases:
+
+- Leader Creates voting room
+- Voter Joins voting room
+- Leader Starts new voting session in voting room
+- Voter Votes in voting session
+- Leader Reveals voting session results
