@@ -7,7 +7,6 @@ public class RoomActor : IActor
 {
     private enum RoomStatus { JUST_CREATED, VOTING, RESULTS_REVEALED }
     private readonly short VoteHasNotBeenSubmittedYet = 0;
-
     private readonly Guid _roomId;
     private readonly string _leaderName;
     private RoomStatus _status = RoomStatus.JUST_CREATED;
@@ -26,6 +25,7 @@ public class RoomActor : IActor
 
     public Task ReceiveAsync(IContext context) =>
         context.Message switch {
+            Stopped stoppedEvent => HandleStoppedEvent(stoppedEvent),
             AddMemberToRoom newMemberInfo => AddNewMember(context, newMemberInfo),
             SendListOfAllMembersJoinedInRoom sendListInfo => SendListOfAllMembersJoinedInRoomToMember(context, sendListInfo),
             StartNewVotingSession startNewVotingSession => StartNewVotingSessionInRoom(context),
@@ -33,6 +33,12 @@ public class RoomActor : IActor
             RevealVotingResults revealResults => RevealResultsInCurrentVotingSession(context),
             _ => Task.CompletedTask
         };
+
+    private Task HandleStoppedEvent(Stopped stoppedEvent)
+    {
+        Console.WriteLine($"Room {_roomId} actor has stopped successfully");
+        return Task.CompletedTask;
+    }
 
     private Task AddNewMember(IContext context, AddMemberToRoom newMemberInfo) {
         if(CanMemberBeAdded(withMemberName: newMemberInfo.WithMemberName) == false)

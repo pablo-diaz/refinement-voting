@@ -18,12 +18,19 @@ public class MemberActor : IActor
 
     public Task ReceiveAsync(IContext context) =>
         context.Message switch {
+            Stopped stoppedEvent => HandleStoppedEvent(stoppedEvent),
             NewMemberHasJoined newMemberJoinedEvent => ProcessNewMemberJoinedEvent(newMemberJoinedEvent),
             NewVotingSessionHasStarted newVotingSessionHasStarted => ProcessNewVotingSessionHasStartedEvent(),
             MemberHasSubmittedVote submittedVote => ProcessMemberHasSubmittedVoteEvent(submittedVote),
             VotingResultHasBeenRevealed votingResults => ProcessVotingResultRevealedEvent(votingResults),
             _ => Task.CompletedTask
         };
+
+    private Task HandleStoppedEvent(Stopped stoppedEvent)
+    {
+        Console.WriteLine($"Member {_memberId} actor has stopped successfully");
+        return Task.CompletedTask;
+    }
 
     private Task ProcessNewMemberJoinedEvent(NewMemberHasJoined @event)
     {
