@@ -4,7 +4,14 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        var  allowSpecificOrigins = "_myAllowSpecificOrigins";
+
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddCors(options => {
+            options.AddPolicy(name: allowSpecificOrigins,
+                policy => { policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod(); });
+        });
 
         builder.Services.AddControllers();
         builder.Services.AddActorSystem();
@@ -16,6 +23,7 @@ public class Program
         Proto.Log.SetLoggerFactory(loggerFactory);
 
         app.UseHttpsRedirection();
+        app.UseCors(allowSpecificOrigins);
         app.UseAuthorization();
         app.MapControllers();
 
