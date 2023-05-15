@@ -10,6 +10,13 @@ const createVotingRoom = async withLeaderName => {
     return data;
 };
 
+const joinVotingRoom = async (withMemberName, withRoomId) => {
+    const postBody = { MemberName: withMemberName, ToRoomId: withRoomId };
+    const { data } = await axios.post(`${apiSetup.backendBaseUrl}/newMember`, postBody);
+    return data;
+};
+
 export default {
-    createVotingRoom
+    createVotingRoom,
+    joinVotingRoom
 };
