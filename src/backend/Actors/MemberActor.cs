@@ -54,7 +54,7 @@ public class MemberActor : IActor
 
     private Task SendMessage(object messageToSend)
     {
-        _withStream.TryToSendMessage?.Invoke($"From '{_memberId}': {Newtonsoft.Json.JsonConvert.SerializeObject(messageToSend)}");
+        _withStream.TryToSendMessage?.Invoke(Newtonsoft.Json.JsonConvert.SerializeObject(messageToSend));
         return Task.CompletedTask;
     }
 }

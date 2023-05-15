@@ -16,7 +16,21 @@ const joinVotingRoom = async (withMemberName, withRoomId) => {
     return data;
 };
 
+const requestListMembers = async (inRoomId, forMemberId) => {
+    const postBody = { };
+    await axios.post(`${apiSetup.backendBaseUrl}/room/${inRoomId}/member/${forMemberId}/getListOfMembers`, postBody);
+};
+
+const hookToServerSentEventsStream = (forMemberId, onMessageFn) => {
+    const evtSource = new EventSource(`${apiSetup.backendBaseUrl}/member/${forMemberId}/stream`);
+    evtSource.onmessage = theEvent => {
+        onMessageFn(JSON.parse(theEvent.data));
+    };
+}
+
 export default {
     createVotingRoom,
-    joinVotingRoom
+    joinVotingRoom,
+    requestListMembers,
+    hookToServerSentEventsStream
 };
