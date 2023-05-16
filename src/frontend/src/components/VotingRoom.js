@@ -23,7 +23,7 @@ const VotingRoom = ({ votingContextData }) => {
         };
     }
 
-    const [state, setState] = useState({ members: ValueWrapper([]), roomStatus: ValueWrapper(RoomStatus.NewVotingSessionCanBeStarted) });
+    const [state, setState] = useState({ members: ValueWrapper([]), roomStatus: ValueWrapper(RoomStatus.NewVotingSessionCanBeStarted), overallAverage: ValueWrapper(-1) });
 
     const processNewMemberHasJoinedEvent = eventData => {
         const countOfExistingMembersWithSameNameFound = state.members.value.filter(m => m.name === eventData.MemberName).length;
@@ -60,6 +60,7 @@ const VotingRoom = ({ votingContextData }) => {
 
             return { ...member, hasVoted: true, vote: voteForMemberFound[0].Vote };
         });
+        newState.overallAverage.value = eventData.Average;
         newState.roomStatus.value = RoomStatus.NewVotingSessionCanBeStarted;
         setState(newState);
     }
@@ -72,6 +73,9 @@ const VotingRoom = ({ votingContextData }) => {
 
     const canVoteBeSubmitted = () =>
         state.roomStatus.value === RoomStatus.VotingSessionHasStarted;
+
+    const canLastAverageBeDisplayed = () =>
+        state.roomStatus.value === RoomStatus.NewVotingSessionCanBeStarted && state.overallAverage.value >= 0;
 
     const processEventFromVotingService = messageFromService => {
         if(messageFromService.EventType === "NewMemberHasJoined")
@@ -113,6 +117,7 @@ const VotingRoom = ({ votingContextData }) => {
         {
            canNewVotingSessionBeStarted() &&
            <div>
+               <br/>
                <button onClick={handleNewVotingSessionRequest}>Start new voting session</button>
                <br/>
            </div>
@@ -121,6 +126,7 @@ const VotingRoom = ({ votingContextData }) => {
         {
            canVotesBeRevealed() &&
            <div>
+               <br/>
                <button onClick={handleRevealVotingResultsRequest}>Reveal voting results</button>
                <br/>
            </div>
@@ -129,7 +135,7 @@ const VotingRoom = ({ votingContextData }) => {
         {
            canVoteBeSubmitted() &&
            <div>
-               <button onClick={e => handleVoteSubmitRequest(e, 0)}>I don't know / I want to skip</button>
+               <br/>
                <button onClick={e => handleVoteSubmitRequest(e, 1)}>1 story points</button>
                <button onClick={e => handleVoteSubmitRequest(e, 2)}>2 story points</button>
                <button onClick={e => handleVoteSubmitRequest(e, 3)}>3 story points</button>
@@ -138,6 +144,11 @@ const VotingRoom = ({ votingContextData }) => {
                <button onClick={e => handleVoteSubmitRequest(e, 13)}>13 story points</button>
                <br/>
            </div>
+        }
+
+        {
+            canLastAverageBeDisplayed() &&
+            <h2>Last Average: {state.overallAverage.value.toFixed(1)}</h2>
         }
 
         { state.members.value.length > 0 && 

@@ -49,7 +49,7 @@ public class MemberActor : IActor
 
     private Task ProcessVotingResultRevealedEvent(VotingResultHasBeenRevealed votingResults)
     {
-        return SendMessage(new { EventType = "VotingResultRevealed", EventData = new { Votes = votingResults.Votes } });
+        return SendMessage(new { EventType = "VotingResultRevealed", EventData = new { Votes = votingResults.Votes, Average = votingResults.Average } });
     }
 
     private Task SendMessage(object messageToSend)
