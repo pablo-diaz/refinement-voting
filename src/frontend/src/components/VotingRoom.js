@@ -16,27 +16,34 @@ const VotingRoom = ({ votingContextData }) => {
         VotingSessionHasStarted: 2
     }
 
-    const [state, setState] = useState({ members: [], roomStatus: RoomStatus.NewVotingSessionCanBeStarted });
+    const ValueWrapper = (theValue) => {
+        return {
+            get value() { return theValue; },
+            set value(newValue) { theValue = newValue; }
+        };
+    }
+
+    const [state, setState] = useState({ members: ValueWrapper([]), roomStatus: ValueWrapper(RoomStatus.NewVotingSessionCanBeStarted) });
 
     const processNewMemberHasJoinedEvent = eventData => {
-        const countOfExistingMembersWithSameNameFound = state.members.filter(m => m.name === eventData.MemberName).length;
+        const countOfExistingMembersWithSameNameFound = state.members.value.filter(m => m.name === eventData.MemberName).length;
         if(countOfExistingMembersWithSameNameFound === 0) {
             var newState = {...state};
-            newState.members.push({ name: eventData.MemberName, hasVoted: false, vote: 0 });
+            newState.members.value.push({ name: eventData.MemberName, hasVoted: false, vote: 0 });
             setState(newState);
         }
     };
 
     const processNewVotingSessionHasStartedEvent = () => {
         var newState = {...state};
-        newState.members = newState.members.map(member => { return { ...member, hasVoted: false, vote: 0 }; });
-        newState.roomStatus = RoomStatus.VotingSessionHasStarted;
+        newState.members.value = newState.members.value.map(member => { return { ...member, hasVoted: false, vote: 0 }; });
+        newState.roomStatus.value = RoomStatus.VotingSessionHasStarted;
         setState(newState);
     }
 
     const processMemberHasVotedEvent = eventData => {
         var newState = {...state};
-        newState.members = newState.members.map(member => {
+        newState.members.value = newState.members.value.map(member => {
             if(member.name === eventData.MemberName)
                 return { ...member, hasVoted: true };
             return member;
@@ -46,28 +53,27 @@ const VotingRoom = ({ votingContextData }) => {
 
     const processVotingResultRevealedEvent = eventData => {
         var newState = {...state};
-        newState.members = newState.members.map(member => {
+        newState.members.value = newState.members.value.map(member => {
             const voteForMemberFound = eventData.Votes.filter(v => v.MemberName === member.name);
             if(voteForMemberFound.length === 0)  // member did not vote
                 return { ...member, hasVoted: false };
 
             return { ...member, hasVoted: true, vote: voteForMemberFound[0].Vote };
         });
-        newState.roomStatus = RoomStatus.NewVotingSessionCanBeStarted;
+        newState.roomStatus.value = RoomStatus.NewVotingSessionCanBeStarted;
         setState(newState);
     }
 
     const canNewVotingSessionBeStarted = () =>
-        votingContextData.isLeader && state.members.length >= 2 && state.roomStatus === RoomStatus.NewVotingSessionCanBeStarted;
+        votingContextData.isLeader && state.members.value.length >= 2 && state.roomStatus.value === RoomStatus.NewVotingSessionCanBeStarted;
 
     const canVotesBeRevealed = () =>
-        votingContextData.isLeader && state.roomStatus === RoomStatus.VotingSessionHasStarted && state.members.filter(m => m.hasVoted).length > 0;
+        votingContextData.isLeader && state.roomStatus.value === RoomStatus.VotingSessionHasStarted && state.members.value.filter(m => m.hasVoted).length > 0;
 
     const canVoteBeSubmitted = () =>
-        state.roomStatus === RoomStatus.VotingSessionHasStarted;
+        state.roomStatus.value === RoomStatus.VotingSessionHasStarted;
 
     const processEventFromVotingService = messageFromService => {
-        console.log(`[SSE - ${messageFromService.EventType}]: ${JSON.stringify(messageFromService)}`);
         if(messageFromService.EventType === "NewMemberHasJoined")
             processNewMemberHasJoinedEvent(messageFromService.EventData);
         else if(messageFromService.EventType === "NewVotingSessionHasStarted")
@@ -96,9 +102,11 @@ const VotingRoom = ({ votingContextData }) => {
     const displayVote = member =>
         member.hasVoted === false
             ? "?"
-            : member.vote > 0
-                ? "" + member.vote
-                : "X";
+            : state.roomStatus.value === RoomStatus.VotingSessionHasStarted
+                ? "(voted)"
+                : member.vote > 0
+                    ? "" + member.vote
+                    : "X";
 
     return (
         <>
@@ -132,7 +140,7 @@ const VotingRoom = ({ votingContextData }) => {
            </div>
         }
 
-        { state.members.size > 0 && 
+        { state.members.value.length > 0 && 
             <table>
                 <thead>
                     <tr>
@@ -141,7 +149,7 @@ const VotingRoom = ({ votingContextData }) => {
                     </tr>
                 </thead>
                 <tbody>
-                { state.members.map(member =>
+                { state.members.value.map(member =>
                     <tr key={member.name}>
                         <td>{member.name}</td>
                         <td>{displayVote(member)}</td>
