@@ -43,12 +43,11 @@ const CreateRoomPage = () => {
         }
         {
             state.serviceResult &&
-            <div>
-                <h1>New room has been created successfully</h1>
-                <p>Please, let others know that the room ID is {`${window.location.href}?r=${state.serviceResult.newRoomId}`}</p>
-                <br />
-                <VotingRoom votingContextData={{ isLeader: true, roomId: state.serviceResult.newRoomId, memberId: state.serviceResult.memberIdForLeader }} />
-            </div>
+            <VotingRoom votingContextData={{
+                isLeader: true,
+                roomId: state.serviceResult.newRoomId,
+                memberId: state.serviceResult.memberIdForLeader,
+                invitationLink: `${window.location.href}?r=${state.serviceResult.newRoomId}` }} />
         }
         </>
     );

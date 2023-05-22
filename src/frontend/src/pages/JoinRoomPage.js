@@ -43,7 +43,11 @@ const JoinRoomPage = ({ contextData }) => {
         }
         {
             state.memberIdResult &&
-            <VotingRoom votingContextData={{ isLeader: false, roomId: contextData.roomId, memberId: state.memberIdResult }} />
+            <VotingRoom votingContextData={{
+                isLeader: false,
+                roomId: contextData.roomId,
+                memberId: state.memberIdResult,
+                invitationLink: null }} />
         }
         </>
     );
