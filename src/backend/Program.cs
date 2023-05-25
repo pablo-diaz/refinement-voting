@@ -22,7 +22,7 @@ public class Program
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
         Proto.Log.SetLoggerFactory(loggerFactory);
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
         app.UseCors(allowSpecificOrigins);
         app.UseAuthorization();
         app.MapControllers();
