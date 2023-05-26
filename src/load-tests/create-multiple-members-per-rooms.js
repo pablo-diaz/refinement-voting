@@ -1,65 +1,74 @@
 // k6 run create-multiple-members-per-rooms.js
 
 import http from 'k6/http';
-import { vu } from 'k6/execution';
 import { sleep } from 'k6';
+import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 export const options = {
     scenarios: {
-        creatingTenRooms: {
+        joiningOneMemberAtATimeDuringTenSeconds: {
             executor: 'per-vu-iterations',
-            startTime: '0s',
+            startTime: '2s',  // leave some time for the rooms to be created
             vus: 1,
-            iterations: 10,
-            env: { phaseName: 'creatingRooms' }
+            iterations: 10
         },
 
-        joiningSomeMembersToEachRoom: {
+        joiningTenMembersAtATimeDuringFourtySeconds: {
             executor: 'per-vu-iterations',
-            startTime: '1s',
-            vus: 1,
-            iterations: 1,
-            env: { phaseName: 'joiningToRooms' }
+            startTime: '15s',
+            vus: 10,
+            iterations: 40
         }
-      }
-  };
+    }
+};
 
-const rooms = [];
+const backendUrl = 'http://localhost:5237';
 
-const createRoom = (fromTestId, withBackendUrl) => {
-    const payload = JSON.stringify({ LeaderName: `Leader${fromTestId}` });
+const createRooms = (roomCountToCreate) => {
+    const roomsCreated = [];
+    for(let i = 1; i<= roomCountToCreate; i++){
+        const maybeRoomIdCreated = createRoom(`Leader${i}`);
+        if(maybeRoomIdCreated)
+            roomsCreated.push(maybeRoomIdCreated);
+    }
+
+    return roomsCreated;
+}
+
+const createRoom = (withLeaderName) => {
+    const payload = JSON.stringify({ LeaderName: withLeaderName });
     const params = { headers: {'Content-Type': 'application/json' } };
     
-    const response = http.post(`${withBackendUrl}/api/votingRoom/newRoom`, payload, params);
-    if(response.status === 200)
-        rooms.push(JSON.parse(response.body).newRoomId);
+    const response = http.post(`${backendUrl}/api/votingRoom/newRoom`, payload, params);
+    return response.status === 200
+    ? JSON.parse(response.body).newRoomId
+    : undefined;
 }
 
-const getRandomRoomId = () => {
-    const roomIndex = Math.floor(Math.random() * rooms.length);
-    return rooms[roomIndex];
+const getRandomRoomId = (fromRooms) => {
+    const roomIndex = Math.floor(Math.random() * fromRooms.length);
+    return fromRooms[roomIndex];
 }
 
-const joinMembersToRooms = (fromTestId, withBackendUrl) => {
-    const withMemberName = `Member${fromTestId}`;
-    const toRoomId = getRandomRoomId();
-    console.log(`[${rooms.length} rooms] Joining to room ${toRoomId} - TestID: ${fromTestId} - with member name: ${withMemberName}`);
+const joinMemberToAnyRoom = (fromTestId, testContextData) => {
+    const withMemberName = `Member_${fromTestId}`;
+    const toRoomId = getRandomRoomId(testContextData.rooms);
     
     const payload = JSON.stringify({ ToRoomId: toRoomId, MemberName: withMemberName });
     const params = { headers: {'Content-Type': 'application/json' } };
     
-    const response = http.post(`${withBackendUrl}/api/votingRoom/newMember`, payload, params);
-    if(response.status === 200)
+    const response = http.post(`${backendUrl}/api/votingRoom/newMember`, payload, params);
+    /*if(response.status === 200)
         console.log(`Member id generated: ${response.body}`);
+    */
 }
 
-export default function () {
-    const backendUrl = 'http://localhost:5237';
+export function setup() {
+    const roomsCreated = createRooms(20);
+    return { rooms: roomsCreated };
+}
 
-    if(__ENV.phaseName === 'creatingRooms'){
-        createRoom(vu.idInTest, backendUrl);
-        sleep(0.02);
-    }
-    else if(__ENV.phaseName === 'joiningToRooms')
-        joinMembersToRooms(vu.idInTest, backendUrl);
+export default function (data) {
+    joinMemberToAnyRoom(uuidv4(), data);
+    sleep(1);
 }
