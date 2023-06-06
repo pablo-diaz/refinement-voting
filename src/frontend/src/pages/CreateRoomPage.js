@@ -15,8 +15,22 @@ const CreateRoomPage = () => {
         setState(generateNewStateForAttribute(state, e.target.name, e.target.value));
     }
 
+    const getFirstValidationError = forLeaderName => {
+        if(!forLeaderName || forLeaderName.trim().length <= 3)
+            return "Please provide a valid name for the Leader of this meeting";
+
+        return null;  // no validation errors found
+    }
+
     const handleCreateNewRoomRequest = e => {
         e.preventDefault();
+
+        const maybeValidationErrorFound = getFirstValidationError(state.leaderName);
+        if(maybeValidationErrorFound) {
+            alert(maybeValidationErrorFound);
+            return;
+        }
+        
         VotingService.createVotingRoom(state.leaderName)
             .then(result => {
                 setState(generateNewStateForAttribute(state, 'serviceResult', result));

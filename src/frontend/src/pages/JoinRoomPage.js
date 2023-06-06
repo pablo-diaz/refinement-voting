@@ -15,8 +15,22 @@ const JoinRoomPage = ({ contextData }) => {
         setState(generateNewStateForAttribute(state, e.target.name, e.target.value));
     }
 
+    const getFirstValidationError = forMemberName => {
+        if(!forMemberName || forMemberName.trim().length < 2)
+            return "Please provide a valid name";
+
+        return null;  // no validation errors found
+    }
+
     const handleJoinVotingRoomRequest = e => {
         e.preventDefault();
+
+        const maybeValidationErrorFound = getFirstValidationError(state.memberName);
+        if(maybeValidationErrorFound) {
+            alert(maybeValidationErrorFound);
+            return;
+        }
+
         VotingService.joinVotingRoom(state.memberName, contextData.roomId)
             .then(result => {
                 setState(generateNewStateForAttribute(state, 'memberIdResult', result));
