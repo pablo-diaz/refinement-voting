@@ -1,0 +1,14 @@
+FROM node:20.5.1 AS builder
+WORKDIR /app
+COPY src/frontend/package.json .
+COPY src/frontend/package-lock.json /app/
+RUN npm ci
+COPY src/frontend/ /app
+RUN npm run build
+
+FROM nginx:1.25.2
+WORKDIR /usr/share/nginx/html
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=builder /app/build .
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
